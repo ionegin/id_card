@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Интерактивная визитка</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+      transition: background-image 0.4s ease, background-color 0.4s ease;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    /* Темы (базовые цвета на случай загрузки) */
+    body[data-theme="light"] { background-color: #87ceeb; }
+    body[data-theme="dark"] { background-color: #0b0f19; }
+    body[data-theme="darker"] { background-color: #050001; }
+    body[data-theme="pink"] { background-color: #ffb6c1; }
+
+    /* Переключатель тем */
+    .theme-toggle-wrapper {
+      position: fixed;
+      top: 28px;
+      right: 28px;
+      z-index: 50;
+    }
+
+    .theme-toggle {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 14px 28px;
+      border-radius: 40px;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      user-select: none;
+    }
+
+    body[data-theme="light"] .theme-toggle {
+      background: rgba(255, 255, 255, 0.85);
+      color: #1a1a1a;
+      border: 2px solid rgba(0, 0, 0, 0.08);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+    body[data-theme="light"] .theme-toggle:hover {
+      background: #ffffff;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+    }
+
+    body[data-theme="dark"] .theme-toggle {
+      background: rgba(30, 30, 35, 0.85);
+      color: #f0f0f0;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+    body[data-theme="dark"] .theme-toggle:hover {
+      background: rgba(45, 45, 52, 0.95);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    body[data-theme="darker"] .theme-toggle {
+      background: linear-gradient(135deg, #0f0203 0%, #2a0407 50%, #140002 100%);
+      color: #ff3b30;
+      border: 2px solid #800c0c;
+      box-shadow: 0 0 15px rgba(180, 0, 0, 0.4), inset 0 0 10px rgba(255, 0, 0, 0.2);
+      text-shadow: 0 0 8px rgba(255, 50, 50, 0.7);
+    }
+    body[data-theme="darker"] .theme-toggle:hover {
+      border-color: #ff1a1a;
+      box-shadow: 0 0 25px rgba(255, 0, 0, 0.75), inset 0 0 15px rgba(255, 50, 0, 0.4);
+      color: #ff6666;
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    body[data-theme="pink"] .theme-toggle {
+      background: linear-gradient(135deg, #ff1493 0%, #ff69b4 50%, #ff1493 100%);
+      color: #ffffff;
+      border: 2px solid #ffffff;
+      box-shadow: 0 8px 25px rgba(255, 20, 147, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.4);
+      text-shadow: 0 2px 4px rgba(139, 0, 74, 0.6);
+    }
+    body[data-theme="pink"] .theme-toggle:hover {
+      background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 30px rgba(255, 20, 147, 0.75), inset 0 0 15px rgba(255, 255, 255, 0.6);
+    }
+
+    .theme-toggle .theme-static {
+      opacity: 0.6;
+      font-weight: 600;
+    }
+
+    /* Визитка */
+    .card-wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 1376px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.35));
+    }
+
+    .hotspot-link { cursor: pointer; outline: none; }
+    
+    /* Подсветка текста */
+    .spotlight-text {
+      fill: #ffffff;
+      opacity: 0;
+      mix-blend-mode: overlay;
+      filter: blur(4px);
+      transition: opacity 0.2s ease, filter 0.2s ease;
+    }
+
+    .hotspot-link:hover .spotlight-text { opacity: 0.65; filter: blur(2.5px); }
+    .hotspot-link:active .spotlight-text { opacity: 0.95; filter: blur(1px); transition-duration: 0.03s; }
+
+    /* Подсветка области QR */
+    .spotlight-qr-bg {
+      fill: #ffffff;
+      opacity: 0;
+      mix-blend-mode: overlay;
+      filter: blur(4px);
+      transition: opacity 0.2s ease, filter 0.2s ease;
+    }
+
+    .qr-trigger:hover .spotlight-qr-bg { opacity: 0.75; filter: blur(2px); }
+    .qr-trigger:active .spotlight-qr-bg { opacity: 0.95; filter: blur(1px); }
+
+    /* Меню Email */
+    .email-menu {
+      position: absolute;
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      background: rgba(42, 30, 24, 0.94);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(160, 110, 70, 0.35);
+      padding: 6px;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      z-index: 100;
+      min-width: 130px;
+    }
+
+    .email-menu.active { display: flex; }
+
+    .email-menu-btn {
+      background: transparent;
+      border: none;
+      color: #e6ded6;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .email-menu-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+    }
+
+    /* Модалка QR */
+    .qr-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(6px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+
+    .qr-modal.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .qr-modal-content {
+      background: #2a1e18;
+      border: 1px solid rgba(160, 110, 70, 0.4);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+      transform: scale(0.85);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .qr-modal.active .qr-modal-content {
+      transform: scale(1);
+    }
+
+    .qr-modal-img {
+      width: 220px;
+      height: 220px;
+      object-fit: contain;
+      border-radius: 10px;
+      background: #ffffff;
+      padding: 10px;
+      display: block;
+    }
+
+    /* Тост "Скопировано" */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #2a1e18;
+      color: #f0e8e0;
+      border: 1px solid rgba(160, 110, 70, 0.4);
+      padding: 10px 22px;
+      border-radius: 30px;
+      font-weight: 500;
+      font-size: 13px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      transition: all 0.25s ease;
+      pointer-events: none;
+      z-index: 101;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body data-theme="light">
+
+  <div class="theme-toggle-wrapper">
+    <button class="theme-toggle" id="themeBtn">
+      <span id="themeName">LIGHT</span>
+      <span class="theme-static">THEME</span>
+    </button>
+  </div>
+
+  <div class="card-wrapper">
+    <svg viewBox="0 0 1376 768" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+      
+      <!-- Картинка руки/визитки -->
+      <image id="cardImage" href="card_no_bg.png" width="1376" height="768" />
+
+      <!-- Telegram -->
+      <a href="https://t.me/ionegin" class="hotspot-link delayed-link" aria-label="Telegram">
+        <rect class="spotlight-text" x="596" y="316" width="148" height="25" rx="12" />
+      </a>
+      <g class="hotspot-link qr-trigger" data-qr="qr_telegram.png" aria-label="Telegram QR">
+        <rect class="spotlight-qr-bg" x="766" y="316" width="25" height="25" rx="5" />
+      </g>
+
+      <!-- Instagram -->
+      <a href="https://instagram.com/im_onegin" class="hotspot-link delayed-link" aria-label="Instagram">
+        <rect class="spotlight-text" x="596" y="359" width="148" height="25" rx="12" />
+      </a>
+      <g class="hotspot-link qr-trigger" data-qr="qr_instagram.png" aria-label="Instagram QR">
+        <rect class="spotlight-qr-bg" x="766" y="359" width="25" height="25" rx="5" />
+      </g>
+
+      <!-- WhatsApp -->
+      <a href="https://wa.me/201038699692" class="hotspot-link delayed-link" aria-label="WhatsApp">
+        <rect class="spotlight-text" x="596" y="402" width="148" height="25" rx="12" />
+      </a>
+      <g class="hotspot-link qr-trigger" data-qr="qr_whatsapp.png" aria-label="WhatsApp QR">
+        <rect class="spotlight-qr-bg" x="766" y="402" width="25" height="25" rx="5" />
+      </g>
+
+      <!-- Email -->
+      <g class="hotspot-link" id="emailBtn" aria-label="Email">
+        <rect class="spotlight-text" x="596" y="445" width="188" height="25" rx="12" />
+      </g>
+
+    </svg>
+
+    <div class="email-menu" id="emailMenu">
+      <a href="mailto:onegilya@gmail.com" class="email-menu-btn delayed-link">Написать</a>
+      <button class="email-menu-btn" id="copyEmailBtn">Скопировать</button>
+    </div>
+  </div>
+
+  <!-- Модалка QR-кода -->
+  <div class="qr-modal" id="qrModal">
+    <div class="qr-modal-content">
+      <img src="" alt="QR Code" class="qr-modal-img" id="qrModalImg">
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Скопировано</div>
+
+  <script>
+    const CLICK_DELAY = 160;
+
+    /* Функция проверки наличия файла: Сначала корень, потом вложенная папка */
+    function resolveImagePath(filename, subfolder, callback) {
+      const rootPath = filename;
+      const folderPath = subfolder ? `${subfolder}/${filename}` : filename;
+
+      const img = new Image();
+      img.onload = () => callback(rootPath);
+      img.onerror = () => callback(folderPath);
+      img.src = rootPath;
+    }
+
+    /* Загрузка изображения руки */
+    const cardImgEl = document.getElementById('cardImage');
+    resolveImagePath('card_no_bg.png', 'THEME', (finalPath) => {
+      cardImgEl.setAttribute('href', finalPath);
+    });
+
+    /* Темы */
+    const themes = [
+      { id: 'light', label: 'LIGHT', file: 'light.webp' },
+      { id: 'dark', label: 'DARK', file: 'dark.webp' },
+      { id: 'darker', label: 'EVEN DARKER', file: 'darker.webp' },
+      { id: 'pink', label: 'PINK', file: 'pink.webp' }
+    ];
+
+    const themeBtn = document.getElementById('themeBtn');
+    const themeName = document.getElementById('themeName');
+
+    const savedThemeId = localStorage.getItem('selectedTheme') || 'light';
+    let currentThemeIdx = themes.findIndex(t => t.id === savedThemeId);
+    if (currentThemeIdx === -1) currentThemeIdx = 0;
+
+    function applyTheme(idx) {
+      const theme = themes[idx];
+      document.body.setAttribute('data-theme', theme.id);
+      themeName.textContent = theme.label;
+      localStorage.setItem('selectedTheme', theme.id);
+
+      /* Применение фонового изображения */
+      resolveImagePath(theme.file, 'THEME', (finalPath) => {
+        document.body.style.backgroundImage = `url('${finalPath}')`;
+      });
+    }
+
+    applyTheme(currentThemeIdx);
+
+    themeBtn.addEventListener('click', () => {
+      currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+      applyTheme(currentThemeIdx);
+    });
+
+    /* Переходы по ссылкам с задержкой */
+    document.querySelectorAll('.delayed-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const href = link.getAttribute('href');
+        const target = link.getAttribute('target');
+
+        setTimeout(() => {
+          if (target === '_blank') {
+            window.open(href, '_blank');
+          } else {
+            window.location.href = href;
+          }
+        }, CLICK_DELAY);
+      });
+    });
+
+    /* Меню Email */
+    const emailBtn = document.getElementById('emailBtn');
+    const emailMenu = document.getElementById('emailMenu');
+    const copyEmailBtn = document.getElementById('copyEmailBtn');
+    const toast = document.getElementById('toast');
+
+    emailBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      
+      setTimeout(() => {
+        emailMenu.classList.toggle('active');
+        if (emailMenu.classList.contains('active')) {
+          const rect = emailBtn.getBoundingClientRect();
+          const containerRect = document.querySelector('.card-wrapper').getBoundingClientRect();
+          
+          emailMenu.style.left = `${rect.right - containerRect.left}px`;
+          emailMenu.style.top = `${rect.top - containerRect.top}px`;
+        }
+      }, CLICK_DELAY);
+    });
+
+    copyEmailBtn.addEventListener('click', () => {
+      setTimeout(() => {
+        navigator.clipboard.writeText('onegilya@gmail.com').then(() => {
+          emailMenu.classList.remove('active');
+          toast.classList.add('show');
+          setTimeout(() => toast.classList.remove('show'), 2000);
+        });
+      }, CLICK_DELAY);
+    });
+
+    /* Модалка QR с логикой проверки пути (Корень -> THEME/QR/) */
+    const qrModal = document.getElementById('qrModal');
+    const qrModalImg = document.getElementById('qrModalImg');
+
+    document.querySelectorAll('.qr-trigger').forEach(trigger => {
+      trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const targetGroup = e.currentTarget;
+        const qrFilename = targetGroup.getAttribute('data-qr');
+        
+        setTimeout(() => {
+          resolveImagePath(qrFilename, 'THEME/QR', (finalPath) => {
+            qrModalImg.src = finalPath;
+            qrModal.classList.add('active');
+          });
+        }, CLICK_DELAY);
+      });
+    });
+
+    /* Закрытие окон при клике */
+    window.addEventListener('click', () => {
+      if (qrModal.classList.contains('active')) {
+        qrModal.classList.remove('active');
+      }
+      emailMenu.classList.remove('active');
+    });
+  </script>
+
+</body>
+</html>
