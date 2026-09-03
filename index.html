@@ -259,6 +259,13 @@
       opacity: 1;
     }
 
+    /* Смещение фона влево на мобильных */
+    @media (max-width: 767px) {
+      body {
+        background-position: 35% center; /* 50% = центр, 35% = на ~15% левее */
+      }
+    }
+
     /* Адаптив под ПК / Планшеты */
     @media (min-width: 768px) {
       .card-wrapper {
