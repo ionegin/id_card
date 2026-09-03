@@ -116,19 +116,21 @@
     .card-wrapper {
       position: relative;
       width: 100%;
+      height: 100vh;
+      height: 100dvh;
       max-width: 1376px;
       margin: 0 auto;
       padding: 0;
       display: flex;
       justify-content: center;
-      align-items: flex-end;
+      align-items: flex-end;   /* рука в нижней части кадра */
+      overflow: hidden;
     }
 
     svg {
       width: auto;
-      height: 65vh;
-      height: 65dvh; /* Занимает 65% высоты мобильного экрана */
-      max-width: 100vw;
+      height: 72vh;
+      height: 72dvh;   /* рука занимает большую часть мобильного экрана */
       display: block;
       filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.35));
     }
@@ -281,6 +283,10 @@
 
     /* Стили для Десктопа */
     @media (min-width: 768px) {
+      .card-wrapper {
+        height: auto;
+        overflow: visible;
+      }
       .theme-toggle-wrapper {
         top: 28px;
         right: 28px;
@@ -508,4 +514,4 @@
   </script>
 
 </body>
-</html>
+</html>Если х
