@@ -2,14 +2,21 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Интерактивная визитка</title>
+  <!-- Готовимся к «нативному» полноэкранному виду при установке/PWA -->
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Визитка">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
       min-height: 100vh;
       min-height: 100dvh;
+      min-height: 100svh;
       display: flex;
       justify-content: center;
       align-items: flex-end; /* Прижимаем контент к низу */
@@ -19,6 +26,11 @@
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
+      /* Подстраховка от вырезов камеры и нижней «домашней» полосы телефона */
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-top: env(safe-area-inset-top);
     }
 
     /* Темы */
@@ -421,19 +433,28 @@
     const cardImgUrl = 'THEME/card_no_bg.png';
 
     const themes = [
-      { id: 'light',   label: 'LIGHT',       file: 'light.webp'  },
-      { id: 'dark',    label: 'DARK',        file: 'dark.webp'   },
-      { id: 'darker',  label: 'EVEN DARKER', file: 'darker.webp' },
-      { id: 'pink',    label: 'PINK',        file: 'pink.webp'   }
+      { id: 'light',   label: 'LIGHT',       file: 'light.webp',  color: '#87ceeb' },
+      { id: 'dark',    label: 'DARK',        file: 'dark.webp',   color: '#0b0f19' },
+      { id: 'darker',  label: 'EVEN DARKER', file: 'darker.webp', color: '#050001' },
+      { id: 'pink',    label: 'PINK',        file: 'pink.webp',   color: '#ffb6c1' }
     ];
     const themeUrl = (t) => `THEME/${t.file}`;
 
-    // Все картинки резолвятся и кэшируются один раз, ещё до первого взаимодействия.
+    // ---------- Предзагрузка картинок в фоне ----------
+    // Главные (рука + текущий фон темы) нужны для ПЕРВОГО экрана — они
+    // грузятся сразу через showImmediate() ниже и не дублируются здесь.
+    // Все остальные webp тем и QR грузим ПОСЛЕ того, как страница показана,
+    // чтобы не «соревноваться» с первым экраном за сеть на медленных телефонах.
     const preloadSrc = (src) => { const i = new Image(); i.src = src; return i; };
-    [cardImgUrl,
-     ...themes.map(themeUrl),
-     'QR/qr_telegram.png', 'QR/qr_instagram.png', 'QR/qr_whatsapp.png'
-    ].forEach(preloadSrc);
+
+    function deferSecondaryPreload() {
+      const rest = themes
+        .filter(t => t.id !== themes[currentThemeIdx].id) // текущую уже качаем
+        .map(themeUrl);
+      [...rest,
+       'QR/qr_telegram.png', 'QR/qr_instagram.png', 'QR/qr_whatsapp.png'
+      ].forEach(preloadSrc);
+    }
 
     /* ---------- Двухслойный кроссфейд фона (opacity вместо url-подмены) ---------- */
     const bgLayers = [
@@ -493,6 +514,9 @@
       document.body.setAttribute('data-theme', theme.id);
       themeName.textContent = theme.label;
       localStorage.setItem('selectedTheme', theme.id);
+      // Статус-бар телефона (iOS/Android) красим под текущую тему
+      const metaColor = document.querySelector('meta[name="theme-color"]');
+      if (metaColor) metaColor.setAttribute('content', theme.color);
     }
 
     function goToTheme(idx) {
@@ -512,6 +536,14 @@
     // Показываем сохранённую тему сразу, без анимации (текущая с приоритетом).
     applyThemeAttrs(themes[currentThemeIdx]);
     showImmediate(themeUrl(themes[currentThemeIdx]));
+
+    // Первый экран уже показан — теперь в фоне докешируем остальные темы и QR.
+    // (не блокируем сеть во время загрузки самой первой картинки)
+    function scheduleDeferredLoad() {
+      if ('requestIdleCallback' in window) requestIdleCallback(deferSecondaryPreload, { timeout: 3000 });
+      else setTimeout(deferSecondaryPreload, 600);
+    }
+    scheduleDeferredLoad();
 
     themeBtn.addEventListener('click', () => {
       goToTheme((currentThemeIdx + 1) % themes.length);
