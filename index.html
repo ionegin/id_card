@@ -12,17 +12,16 @@
       min-height: 100dvh;
       display: flex;
       justify-content: center;
-      align-items: flex-end;
+      align-items: flex-end; /* Прижимаем контент к низу */
       font-family: system-ui, -apple-system, sans-serif;
-      overflow-x: hidden;
-      overflow-y: auto;
+      overflow: hidden;
       transition: background-image 0.4s ease, background-color 0.4s ease;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
     }
 
-    /* Темы (базовые цвета на случай загрузки) */
+    /* Темы */
     body[data-theme="light"] { background-color: #87ceeb; }
     body[data-theme="dark"] { background-color: #0b0f19; }
     body[data-theme="darker"] { background-color: #050001; }
@@ -64,7 +63,6 @@
     body[data-theme="light"] .theme-toggle:hover {
       background: #ffffff;
       transform: translateY(-2px);
-      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
     }
 
     body[data-theme="dark"] .theme-toggle {
@@ -74,37 +72,19 @@
       backdrop-filter: blur(12px);
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     }
-    body[data-theme="dark"] .theme-toggle:hover {
-      background: rgba(45, 45, 52, 0.95);
-      border-color: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-    }
 
     body[data-theme="darker"] .theme-toggle {
       background: linear-gradient(135deg, #0f0203 0%, #2a0407 50%, #140002 100%);
       color: #ff3b30;
       border: 2px solid #800c0c;
-      box-shadow: 0 0 15px rgba(180, 0, 0, 0.4), inset 0 0 10px rgba(255, 0, 0, 0.2);
-      text-shadow: 0 0 8px rgba(255, 50, 50, 0.7);
-    }
-    body[data-theme="darker"] .theme-toggle:hover {
-      border-color: #ff1a1a;
-      box-shadow: 0 0 25px rgba(255, 0, 0, 0.75), inset 0 0 15px rgba(255, 50, 0, 0.4);
-      color: #ff6666;
-      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 0 15px rgba(180, 0, 0, 0.4);
     }
 
     body[data-theme="pink"] .theme-toggle {
       background: linear-gradient(135deg, #ff1493 0%, #ff69b4 50%, #ff1493 100%);
       color: #ffffff;
       border: 2px solid #ffffff;
-      box-shadow: 0 8px 25px rgba(255, 20, 147, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.4);
-      text-shadow: 0 2px 4px rgba(139, 0, 74, 0.6);
-    }
-    body[data-theme="pink"] .theme-toggle:hover {
-      background: linear-gradient(135deg, #ff69b4 0%, #ff1493 100%);
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 12px 30px rgba(255, 20, 147, 0.75), inset 0 0 15px rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 25px rgba(255, 20, 147, 0.5);
     }
 
     .theme-toggle .theme-static {
@@ -112,25 +92,23 @@
       font-weight: 600;
     }
 
-    /* Визитка */
+    /* Визитка-контейнер */
     .card-wrapper {
       position: relative;
-      width: 100%;
-      height: 100vh;
-      height: 100dvh;
+      width: 100vw;
+      height: 70vh;
+      height: 70dvh; /* На мобильном занимает 70% высоты экрана у нижнего края */
       max-width: 1376px;
       margin: 0 auto;
-      padding: 0;
       display: flex;
       justify-content: center;
-      align-items: flex-end;   /* рука в нижней части кадра */
+      align-items: flex-end;
       overflow: hidden;
     }
 
     svg {
-      width: auto;
-      height: 72vh;
-      height: 72dvh;   /* рука занимает большую часть мобильного экрана */
+      width: 100%;
+      height: 100%;
       display: block;
       filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.35));
     }
@@ -281,10 +259,11 @@
       opacity: 1;
     }
 
-    /* Стили для Десктопа */
+    /* Адаптив под ПК / Планшеты */
     @media (min-width: 768px) {
       .card-wrapper {
         height: auto;
+        width: 100%;
         overflow: visible;
       }
       .theme-toggle-wrapper {
@@ -297,14 +276,9 @@
         gap: 12px;
       }
       svg {
-        width: 100%;
         height: auto;
         max-height: 100vh;
         max-height: 100dvh;
-      }
-      .qr-modal-img {
-        width: 220px;
-        height: 220px;
       }
     }
   </style>
@@ -319,7 +293,8 @@
   </div>
 
   <div class="card-wrapper">
-    <svg viewBox="0 0 1376 768" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
+    <!-- preserveAspectRatio="xMidYMax slice" решает проблему масштабирования на мобилке -->
+    <svg viewBox="0 0 1376 768" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
       
       <!-- Картинка руки/визитки -->
       <image id="cardImage" href="card_no_bg.png" width="1376" height="768" />
@@ -373,7 +348,6 @@
   <script>
     const CLICK_DELAY = 160;
 
-    /* Функция проверки наличия файла: Сначала корень, потом вложенная папка */
     function resolveImagePath(filename, subfolder, callback) {
       const rootPath = filename;
       const folderPath = subfolder ? `${subfolder}/${filename}` : filename;
@@ -384,13 +358,11 @@
       img.src = rootPath;
     }
 
-    /* Загрузка изображения руки */
     const cardImgEl = document.getElementById('cardImage');
     resolveImagePath('card_no_bg.png', 'THEME', (finalPath) => {
       cardImgEl.setAttribute('href', finalPath);
     });
 
-    /* Темы */
     const themes = [
       { id: 'light', label: 'LIGHT', file: 'light.webp' },
       { id: 'dark', label: 'DARK', file: 'dark.webp' },
@@ -411,7 +383,6 @@
       themeName.textContent = theme.label;
       localStorage.setItem('selectedTheme', theme.id);
 
-      /* Применение фонового изображения */
       resolveImagePath(theme.file, 'THEME', (finalPath) => {
         document.body.style.backgroundImage = `url('${finalPath}')`;
       });
@@ -424,7 +395,6 @@
       applyTheme(currentThemeIdx);
     });
 
-    /* Переходы по ссылкам с задержкой */
     document.querySelectorAll('.delayed-link').forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -441,7 +411,6 @@
       });
     });
 
-    /* Меню Email */
     const emailBtn = document.getElementById('emailBtn');
     const emailMenu = document.getElementById('emailMenu');
     const copyEmailBtn = document.getElementById('copyEmailBtn');
@@ -477,7 +446,6 @@
       }, CLICK_DELAY);
     });
 
-    /* Модалка QR с логикой проверки пути (Корень -> QR/) */
     const qrModal = document.getElementById('qrModal');
     const qrModalImg = document.getElementById('qrModalImg');
 
@@ -496,7 +464,6 @@
       });
     });
 
-    /* Закрытие окон при клике */
     window.addEventListener('click', () => {
       if (qrModal.classList.contains('active')) {
         qrModal.classList.remove('active');
@@ -504,7 +471,6 @@
       emailMenu.classList.remove('active');
     });
 
-    /* Закрытие по нажатию Esc */
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         qrModal.classList.remove('active');
@@ -514,4 +480,4 @@
   </script>
 
 </body>
-</html>Если х
+</html>
