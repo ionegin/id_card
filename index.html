@@ -15,6 +15,7 @@
       align-items: flex-end;
       font-family: system-ui, -apple-system, sans-serif;
       overflow-x: hidden;
+      overflow-y: auto;
       transition: background-image 0.4s ease, background-color 0.4s ease;
       background-size: cover;
       background-position: center;
@@ -117,17 +118,17 @@
       width: 100%;
       max-width: 1376px;
       margin: 0 auto;
-      padding: 12px 12px 0 12px;
+      padding: 0;
       display: flex;
       justify-content: center;
       align-items: flex-end;
     }
 
     svg {
-      width: 100%;
-      height: auto;
-      max-height: 100vh;
-      max-height: 100dvh;
+      width: auto;
+      height: 65vh;
+      height: 65dvh; /* Занимает 65% высоты мобильного экрана */
+      max-width: 100vw;
       display: block;
       filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.35));
     }
@@ -278,7 +279,7 @@
       opacity: 1;
     }
 
-    /* Медиа-запрос для экранов шире десктопа/планшета */
+    /* Стили для Десктопа */
     @media (min-width: 768px) {
       .theme-toggle-wrapper {
         top: 28px;
@@ -289,8 +290,11 @@
         font-size: 15px;
         gap: 12px;
       }
-      .card-wrapper {
-        padding: 0;
+      svg {
+        width: 100%;
+        height: auto;
+        max-height: 100vh;
+        max-height: 100dvh;
       }
       .qr-modal-img {
         width: 220px;
