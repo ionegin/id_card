@@ -425,7 +425,7 @@
       }, CLICK_DELAY);
     });
 
-    /* Модалка QR с логикой проверки пути (Корень -> THEME/QR/) */
+    /* Модалка QR с логикой проверки пути (Корень -> QR/) */
     const qrModal = document.getElementById('qrModal');
     const qrModalImg = document.getElementById('qrModalImg');
 
@@ -436,7 +436,7 @@
         const qrFilename = targetGroup.getAttribute('data-qr');
         
         setTimeout(() => {
-          resolveImagePath(qrFilename, 'THEME/QR', (finalPath) => {
+          resolveImagePath(qrFilename, 'QR', (finalPath) => {
             qrModalImg.src = finalPath;
             qrModal.classList.add('active');
           });
