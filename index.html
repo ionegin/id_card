@@ -9,11 +9,12 @@
     
     body {
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-end;
       font-family: system-ui, -apple-system, sans-serif;
-      overflow: hidden;
+      overflow-x: hidden;
       transition: background-image 0.4s ease, background-color 0.4s ease;
       background-size: cover;
       background-position: center;
@@ -29,8 +30,8 @@
     /* Переключатель тем */
     .theme-toggle-wrapper {
       position: fixed;
-      top: 28px;
-      right: 28px;
+      top: 16px;
+      right: 16px;
       z-index: 50;
     }
 
@@ -38,17 +39,18 @@
       border: none;
       outline: none;
       cursor: pointer;
-      padding: 14px 28px;
+      padding: 10px 18px;
       border-radius: 40px;
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 800;
       letter-spacing: 1px;
       text-transform: uppercase;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
       user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
     body[data-theme="light"] .theme-toggle {
@@ -115,17 +117,22 @@
       width: 100%;
       max-width: 1376px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 12px 12px 0 12px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
     }
 
     svg {
       width: 100%;
       height: auto;
+      max-height: 100vh;
+      max-height: 100dvh;
       display: block;
       filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.35));
     }
 
-    .hotspot-link { cursor: pointer; outline: none; }
+    .hotspot-link { cursor: pointer; outline: none; -webkit-tap-highlight-color: transparent; }
     
     /* Подсветка текста */
     .spotlight-text {
@@ -136,7 +143,8 @@
       transition: opacity 0.2s ease, filter 0.2s ease;
     }
 
-    .hotspot-link:hover .spotlight-text { opacity: 0.65; filter: blur(2.5px); }
+    .hotspot-link:hover .spotlight-text,
+    .hotspot-link:active .spotlight-text { opacity: 0.65; filter: blur(2.5px); }
     .hotspot-link:active .spotlight-text { opacity: 0.95; filter: blur(1px); transition-duration: 0.03s; }
 
     /* Подсветка области QR */
@@ -148,23 +156,24 @@
       transition: opacity 0.2s ease, filter 0.2s ease;
     }
 
-    .qr-trigger:hover .spotlight-qr-bg { opacity: 0.75; filter: blur(2px); }
+    .qr-trigger:hover .spotlight-qr-bg,
+    .qr-trigger:active .spotlight-qr-bg { opacity: 0.75; filter: blur(2px); }
     .qr-trigger:active .spotlight-qr-bg { opacity: 0.95; filter: blur(1px); }
 
     /* Меню Email */
     .email-menu {
-      position: absolute;
+      position: fixed;
       display: none;
       flex-direction: column;
       gap: 4px;
-      background: rgba(42, 30, 24, 0.94);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(160, 110, 70, 0.35);
+      background: rgba(42, 30, 24, 0.96);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(160, 110, 70, 0.4);
       padding: 6px;
       border-radius: 10px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
       z-index: 100;
-      min-width: 130px;
+      min-width: 140px;
     }
 
     .email-menu.active { display: flex; }
@@ -173,18 +182,20 @@
       background: transparent;
       border: none;
       color: #e6ded6;
-      padding: 8px 14px;
+      padding: 10px 14px;
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 500;
       text-align: left;
       cursor: pointer;
       text-decoration: none;
       transition: background 0.15s ease, color 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .email-menu-btn:hover {
-      background: rgba(255, 255, 255, 0.12);
+    .email-menu-btn:hover,
+    .email-menu-btn:active {
+      background: rgba(255, 255, 255, 0.15);
       color: #ffffff;
     }
 
@@ -195,7 +206,8 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.5);
+      height: 100dvh;
+      background: rgba(0, 0, 0, 0.6);
       backdrop-filter: blur(6px);
       display: flex;
       justify-content: center;
@@ -205,6 +217,7 @@
       pointer-events: none;
       transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
+      padding: 20px;
     }
 
     .qr-modal.active {
@@ -215,11 +228,12 @@
     .qr-modal-content {
       background: #2a1e18;
       border: 1px solid rgba(160, 110, 70, 0.4);
-      padding: 20px;
+      padding: 16px;
       border-radius: 16px;
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
       transform: scale(0.85);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      max-width: 90vw;
     }
 
     .qr-modal.active .qr-modal-content {
@@ -229,6 +243,8 @@
     .qr-modal-img {
       width: 220px;
       height: 220px;
+      max-width: 70vw;
+      max-height: 70vw;
       object-fit: contain;
       border-radius: 10px;
       background: #ffffff;
@@ -239,7 +255,7 @@
     /* Тост "Скопировано" */
     .toast {
       position: fixed;
-      bottom: 40px;
+      bottom: 30px;
       left: 50%;
       transform: translateX(-50%) translateY(100px);
       background: #2a1e18;
@@ -254,11 +270,32 @@
       transition: all 0.25s ease;
       pointer-events: none;
       z-index: 101;
+      white-space: nowrap;
     }
 
     .toast.show {
       transform: translateX(-50%) translateY(0);
       opacity: 1;
+    }
+
+    /* Медиа-запрос для экранов шире десктопа/планшета */
+    @media (min-width: 768px) {
+      .theme-toggle-wrapper {
+        top: 28px;
+        right: 28px;
+      }
+      .theme-toggle {
+        padding: 14px 28px;
+        font-size: 15px;
+        gap: 12px;
+      }
+      .card-wrapper {
+        padding: 0;
+      }
+      .qr-modal-img {
+        width: 220px;
+        height: 220px;
+      }
     }
   </style>
 </head>
@@ -407,10 +444,15 @@
         emailMenu.classList.toggle('active');
         if (emailMenu.classList.contains('active')) {
           const rect = emailBtn.getBoundingClientRect();
-          const containerRect = document.querySelector('.card-wrapper').getBoundingClientRect();
+          const menuWidth = 140;
           
-          emailMenu.style.left = `${rect.right - containerRect.left}px`;
-          emailMenu.style.top = `${rect.top - containerRect.top}px`;
+          let leftPos = rect.right;
+          if (leftPos + menuWidth > window.innerWidth) {
+            leftPos = window.innerWidth - menuWidth - 10;
+          }
+          
+          emailMenu.style.left = `${leftPos}px`;
+          emailMenu.style.top = `${rect.top}px`;
         }
       }, CLICK_DELAY);
     });
@@ -450,6 +492,14 @@
         qrModal.classList.remove('active');
       }
       emailMenu.classList.remove('active');
+    });
+
+    /* Закрытие по нажатию Esc */
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        qrModal.classList.remove('active');
+        emailMenu.classList.remove('active');
+      }
     });
   </script>
 
