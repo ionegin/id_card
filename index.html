@@ -87,10 +87,68 @@
       box-shadow: 0 8px 25px rgba(255, 20, 147, 0.5);
     }
 
+    /* ===== Неоновая окантовка кнопки темы (Light & Dark) =====
+       Чёткая светло-синяя неоновая рамка «как у Pink», но вместо цветной
+       тени — постоянная (никогда не выключается) пульсация яркости
+       светло-синего свечения. Цвет самого неона не меняется.
+       "darker"/"pink" самодостаточны и оставлены как есть. */
+
+    body[data-theme="light"] .theme-toggle,
+    body[data-theme="dark"]  .theme-toggle {
+      border: 3px solid #2741c9;          /* толще, тёмно-синий неон */
+      box-shadow: 0 0 18px rgba(39, 65, 201, 0.55),
+                  0 0 34px rgba(39, 65, 201, 0.35);
+      animation: themeNeonPulse 2.2s ease-in-out infinite;
+    }
+
+    /* Более выраженная пульсация: тёмно-синяя аура «дышит» +
+       по кругу расходится яркое неоновое кольцо */
+    @keyframes themeNeonPulse {
+      0%, 100% {
+        box-shadow: 0 0 14px rgba(39, 65, 201, 0.60),
+                    0 0 28px rgba(39, 65, 201, 0.38),
+                    0 0 0 0   rgba(63, 99, 255, 0.70);
+      }
+      30% {
+        box-shadow: 0 0 10px rgba(39, 65, 201, 0.45),
+                    0 0 20px rgba(39, 65, 201, 0.28),
+                    0 0 0 0   rgba(63, 99, 255, 0.55);
+      }
+      55% {
+        box-shadow: 0 0 18px rgba(49, 92, 255, 0.95),
+                    0 0 42px rgba(49, 92, 255, 0.85),
+                    0 0 0 3px rgba(99, 150, 255, 0.75);
+      }
+      80% {
+        box-shadow: 0 0 16px rgba(39, 65, 201, 0.75),
+                    0 0 36px rgba(39, 65, 201, 0.60),
+                    0 0 0 10px rgba(63, 99, 255, 0.0);
+      }
+      100% {
+        box-shadow: 0 0 14px rgba(39, 65, 201, 0.60),
+                    0 0 28px rgba(39, 65, 201, 0.38),
+                    0 0 0 0   rgba(63, 99, 255, 0.70);
+      }
+    }
+
     .theme-toggle .theme-static {
       opacity: 0.6;
       font-weight: 600;
     }
+
+    /* Фоновые слои тем (два наложенных слоя для кроссфейда через opacity) */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      will-change: opacity, background-image;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+    #bgBottom { z-index: -2; opacity: 1; }
+    #bgTop    { z-index: -1; opacity: 0; }
 
     /* Визитка-контейнер */
     .card-wrapper {
@@ -261,7 +319,7 @@
 
     /* Смещение фона влево на мобильных */
     @media (max-width: 767px) {
-      body {
+      .bg-layer {
         background-position: 35% center; /* 50% = центр, 35% = на ~15% левее */
       }
     }
@@ -292,6 +350,10 @@
 </head>
 <body data-theme="light">
 
+  <!-- Два наложенных слоя фона, между которыми происходит кроссфейд тем -->
+  <div class="bg-layer" id="bgBottom"></div>
+  <div class="bg-layer" id="bgTop"></div>
+
   <div class="theme-toggle-wrapper">
     <button class="theme-toggle" id="themeBtn">
       <span id="themeName">LIGHT</span>
@@ -304,7 +366,7 @@
     <svg viewBox="0 0 1376 768" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision">
       
       <!-- Картинка руки/визитки -->
-      <image id="cardImage" href="card_no_bg.png" width="1376" height="768" />
+      <image id="cardImage" href="THEME/card_no_bg.png" width="1376" height="768" />
 
       <!-- Telegram -->
       <a href="https://t.me/ionegin" class="hotspot-link delayed-link" aria-label="Telegram">
@@ -355,27 +417,90 @@
   <script>
     const CLICK_DELAY = 160;
 
-    function resolveImagePath(filename, subfolder, callback) {
-      const rootPath = filename;
-      const folderPath = subfolder ? `${subfolder}/${filename}` : filename;
-
-      const img = new Image();
-      img.onload = () => callback(rootPath);
-      img.onerror = () => callback(folderPath);
-      img.src = rootPath;
-    }
-
-    const cardImgEl = document.getElementById('cardImage');
-    resolveImagePath('card_no_bg.png', 'THEME', (finalPath) => {
-      cardImgEl.setAttribute('href', finalPath);
-    });
+    /* ---------- Прямые пути файлов (без «угадывания» корня/папки) ---------- */
+    const cardImgUrl = 'THEME/card_no_bg.png';
 
     const themes = [
-      { id: 'light', label: 'LIGHT', file: 'light.webp' },
-      { id: 'dark', label: 'DARK', file: 'dark.webp' },
-      { id: 'darker', label: 'EVEN DARKER', file: 'darker.webp' },
-      { id: 'pink', label: 'PINK', file: 'pink.webp' }
+      { id: 'light',   label: 'LIGHT',       file: 'light.webp'  },
+      { id: 'dark',    label: 'DARK',        file: 'dark.webp'   },
+      { id: 'darker',  label: 'EVEN DARKER', file: 'darker.webp' },
+      { id: 'pink',    label: 'PINK',        file: 'pink.webp'   }
     ];
+    const themeUrl = (t) => `THEME/${t.file}`;
+
+    // Все картинки резолвятся и кэшируются один раз, ещё до первого взаимодействия.
+    const preloadSrc = (src) => { const i = new Image(); i.src = src; return i; };
+    [cardImgUrl,
+     ...themes.map(themeUrl),
+     'QR/qr_telegram.png', 'QR/qr_instagram.png', 'QR/qr_whatsapp.png'
+    ].forEach(preloadSrc);
+
+    /* ---------- Двухслойный кроссфейд фона (opacity вместо url-подмены) ---------- */
+    const bgLayers = [
+      document.getElementById('bgBottom'),
+      document.getElementById('bgTop')
+    ];
+    let activeIdx = 0;   // какой слой сейчас видимый (opacity 1)
+    let lock = false;    // защита от повторных кликов во время перехода
+
+    function applyTo(el, url) {
+      el.style.backgroundImage = url ? `url('${url}')` : 'none';
+    }
+
+    function animate(el, value) {
+      el.style.transition = value ? 'opacity 0.55s ease' : 'none';
+    }
+
+    // Первичный/безанимационный показ выбранной темы.
+    function showImmediate(url) {
+      // гарантируем чистое начальное состояние двух слоёв
+      bgLayers.forEach(l => { l.style.backgroundImage = 'none'; l.style.opacity = '0'; });
+      const shown = bgLayers[activeIdx];
+      shown.style.zIndex = '-1';
+      bgLayers[1 - activeIdx].style.zIndex = '-2';
+      applyTo(shown, url);
+      shown.style.opacity = '1';
+    }
+
+    // Плавный кроссфейд на новую картинку фона.
+    function crossfade(url) {
+      if (lock) return;
+      lock = true;
+
+      const shown = bgLayers[activeIdx];      // старый, ещё видимый
+      const hidden = bgLayers[1 - activeIdx]; // сюда кладём новый фон
+
+      hidden.style.zIndex = '-1';             // поверх старого
+      applyTo(hidden, url);                   // задаём URL заранее
+      animate(hidden, false);
+      hidden.style.opacity = '0';
+      void hidden.getBoundingClientRect();    // принудительный reflow
+      animate(hidden, true);
+      shown.style.zIndex = '-2';
+      hidden.style.opacity = '1';             // fade-in
+
+      setTimeout(() => {
+        shown.style.opacity = '0';            // fade-out старого
+        shown.style.zIndex = '-2';
+        applyTo(shown, null);                 // освобождаем старый слой
+        activeIdx = 1 - activeIdx;
+        lock = false;
+      }, 560);
+    }
+
+    /* ---------- Применение темы ---------- */
+    function applyThemeAttrs(theme) {
+      document.body.setAttribute('data-theme', theme.id);
+      themeName.textContent = theme.label;
+      localStorage.setItem('selectedTheme', theme.id);
+    }
+
+    function goToTheme(idx) {
+      currentThemeIdx = idx;
+      const theme = themes[idx];
+      applyThemeAttrs(theme);
+      crossfade(themeUrl(theme));
+    }
 
     const themeBtn = document.getElementById('themeBtn');
     const themeName = document.getElementById('themeName');
@@ -384,22 +509,12 @@
     let currentThemeIdx = themes.findIndex(t => t.id === savedThemeId);
     if (currentThemeIdx === -1) currentThemeIdx = 0;
 
-    function applyTheme(idx) {
-      const theme = themes[idx];
-      document.body.setAttribute('data-theme', theme.id);
-      themeName.textContent = theme.label;
-      localStorage.setItem('selectedTheme', theme.id);
-
-      resolveImagePath(theme.file, 'THEME', (finalPath) => {
-        document.body.style.backgroundImage = `url('${finalPath}')`;
-      });
-    }
-
-    applyTheme(currentThemeIdx);
+    // Показываем сохранённую тему сразу, без анимации (текущая с приоритетом).
+    applyThemeAttrs(themes[currentThemeIdx]);
+    showImmediate(themeUrl(themes[currentThemeIdx]));
 
     themeBtn.addEventListener('click', () => {
-      currentThemeIdx = (currentThemeIdx + 1) % themes.length;
-      applyTheme(currentThemeIdx);
+      goToTheme((currentThemeIdx + 1) % themes.length);
     });
 
     document.querySelectorAll('.delayed-link').forEach(link => {
@@ -459,14 +574,12 @@
     document.querySelectorAll('.qr-trigger').forEach(trigger => {
       trigger.addEventListener('click', (e) => {
         e.stopPropagation();
-        const targetGroup = e.currentTarget;
-        const qrFilename = targetGroup.getAttribute('data-qr');
-        
+        const qrFilename = trigger.getAttribute('data-qr');
+
         setTimeout(() => {
-          resolveImagePath(qrFilename, 'QR', (finalPath) => {
-            qrModalImg.src = finalPath;
-            qrModal.classList.add('active');
-          });
+          // Прямой путь; файл уже был предзагружен/закэширован выше.
+          qrModalImg.src = `QR/${qrFilename}`;
+          qrModal.classList.add('active');
         }, CLICK_DELAY);
       });
     });
